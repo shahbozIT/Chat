@@ -1,0 +1,302 @@
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1b1b1b;
+            color: #fff;
+            margin: 0;
+        }
+
+        .chat-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ff8c00;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            background-color: #333; /* Цвет меню */
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .menu h1, .menu p {
+            margin: 0;
+            color: #fff; /* Цвет текста */
+        }
+
+        .chat-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-info p {
+            margin: 0;
+            color: #fff; /* Цвет текста */
+        }
+
+        #chat-window {
+            flex: 1;
+            height: 700px;
+            overflow-y: scroll;
+            padding: 10px;
+            border: 1px solid #ff8c00;
+            border-radius: 5px;
+            background-color: #2b2b2b;
+            margin-bottom: 10px;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: calc(100% - 40px); /* ширина окна чата минус padding */
+            margin-left: 20px; /* сдвигаем вправо на 20px, чтобы соответствовать блоку чата */
+        }
+
+        .input-area .attach-icon {
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #ff8c00;
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        button {
+            margin: 5px;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2b2b2b;
+            color: #fff;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            flex: 1;
+        }
+
+        button {
+            background-color: #ff8c00;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .message {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ff8c00;
+            border-radius: 5px;
+            background-color: #2b2b2b;
+            word-break: break-all;
+        }
+
+        .message p {
+            margin: 0;
+        }
+
+        .message span {
+            color: #808080; /* Цвет времени сообщения */
+            font-size: 12px;
+            margin-left: 10px; /* Отступ времени сообщения от текста сообщения */
+        }
+
+        .message .material-icons {
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 10px; /* Отступ иконок редактирования и удаления от времени сообщения */
+        }
+
+        .message img,
+        .message video {
+            max-width: 300px;
+            max-height: 300px;
+            display: block;
+            margin-top: 5px; /* Отступ изображений и видео от текста сообщения */
+        }
+
+        .attach-icon {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #file-preview {
+            display: none;
+            max-width: 100%;
+            margin-top: 10px;
+        }
+
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        #modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border: 2px solid #ff8c00;
+            border-radius: 5px;
+            color: #fff;
+            z-index: 2;
+        }
+
+        #username-input {
+            margin-bottom: 10px;
+        }
+
+        #file-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #file-preview img,
+        #file-preview video {
+            max-width: 100px;
+            max-height: 100px;
+            margin-bottom: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border: 2px solid #ff8c00;
+            border-radius: 5px;
+            color: #fff;
+            z-index: 2;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #555;
+        }
+
+        .progress {
+            width: 0;
+            height: 20px;
+            background-color: #ff8c00;
+            text-align: center;
+            line-height: 20px;
+            border-radius: 5px;
+        }
+
+        /* Additional styles for the user list */
+        .user-item {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #ff8c00;
+            border-radius: 5px;
+            background-color: #2b2b2b;
+            color: #fff;
+        }
+
+        .user-item p {
+            margin: 5px 0;
+        }
+
+        .online-users {
+            margin-bottom: 20px;
+        }
+
+        .offline-users {
+            margin-top: 20px;
+        }
+
+        .online-users p,
+        .offline-users p {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #right-section {
+            float: right;
+            width: 25%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #user-list {
+            height: calc(100vh - 200px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-right: 20px; /* Отступ справа от блока чата */
+            padding: 10px;
+            box-sizing: border-box;
+            width: 25%; /* Ширина блока с пользователями */
+            background-color: #333; /* Цвет блока с пользователями */
+            border-radius: 5px;
+        }
+
+        .user-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #2b2b2b;
+            color: #fff;
+        }
+
+        .user-box:hover {
+            background-color: #e0e0e0;
+            color: #000;
+        }
+
+        .user-box p {
+            margin: 0;
+        }
+
+        .user-box .status {
+            color: #808080;
+            font-size: 12px;
+        }
+
+        .user-box .online {
+            color: #28a74b;
+        }
+
+        .user-box .offline {
+            color: #721c24;
+        }
