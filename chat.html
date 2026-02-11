@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="styles/styles-chat.css">
+</head>
+<body>
+
+<div id="modal-overlay-percent" class="modal">
+    <div class="modal-content">
+        <h2>Загрузка файла</h2>
+        <div class="progress-bar">
+            <div class="progress">0%</div>
+        </div>
+    </div>
+</div>
+<div class="menu">
+    <h1>Общий чат</h1>
+    <div class="chat-info">
+        <p id="user-info">Имя Фамилия - <span id="user-status">Оффлайн</span></p>
+        <p id="last-online">Последнее время в сети: </p>
+    </div>
+</div>
+<div class="chat-container">
+    <div id="chat-window"></div>
+</div>
+<div class="input-area">
+    <div id="file-preview"></div>
+    <i class="material-icons attach-icon" onclick="openFileInput()">attach_file</i>
+    <input type="file" id="file-input" accept="image/*,video/*">
+    <input type="text" id="message-input" placeholder="Введите сообщение">
+    <button onclick="sendMessage()">Отправить</button>
+</div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script>
+/* ================== FIREBASE INIT ================== */
+const firebaseConfig = {
+    apiKey: "AIzaSyC6NZ3gKHY4SC5jhpd2ji_K_sHZ_TFV0lg",
+    authDomain: "chat-7c885.firebaseapp.com",
+    projectId: "chat-7c885",
+    storageBucket: "chat-7c885.firebasestorage.app",
+    messagingSenderId: "83331383888",
+    appId: "1:83331383888:web:b1d402b7e30cbcfeb5c755"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+const storage = firebase.storage();
+const db = firebase.firestore();
+
+/* ================== GLOBAL ================== */
+const uid = new URLSearchParams(window.location.search).get('uid');
+let username = '';
+
+const chatWindow = document.getElementById('chat-window');
+const messageInput = document.getElementById('message-input');
+const fileInput = document.getElementById('file-input');
+const filePreview = document.getElementById('file-preview');
+const modal = document.getElementById('modal-overlay-percent');
+
+/* ================== HELPERS ================== */
+function openModal() { modal.style.display = 'block'; }
+function closeModal() { modal.style.display = 'none'; }
+
+function updateProgress(percent) {
+    const bar = document.querySelector('.progress');
+    bar.style.width = percent + '%';
+    bar.textContent = percent.toFixed(0) + '%';
+}
+
+/* ================== USER STATUS ================== */
+function setStatus(online) {
+    if (!uid) return;
+    db.collection('users').doc(uid).update({
+        statusOnline: online,
+        lastOnline: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+/* ================== LOAD USER ================== */
+async function loadUser() {
+    if (!uid) {
+        location.href = 'index.html';
+        return;
+    }
+
+    const doc = await db.collection('users').doc(uid).get();
+    if (!doc.exists) return;
+
+    username = doc.data().firstName;
+}
+
+/* ================== SEND MESSAGE ================== */
+async function sendMessage() {
+    const text = messageInput.value.trim();
+    const file = fileInput.files[0];
+
+    if (!text && !file) return alert('Введите сообщение или выберите файл');
+
+    // openModal();
+
+    let payload = {
+        text,
+        username,
+        uid,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    if (file) {
+        const filePath = `media/${uid}_${Date.now()}_${file.name}`;
+        const ref = storage.ref(filePath);
+        const task = ref.put(file);
+
+        task.on('state_changed', snap => {
+            updateProgress((snap.bytesTransferred / snap.totalBytes) * 100);
+        });
+
+        const snap = await task;
+        payload.fileUrl = await snap.ref.getDownloadURL();
+        payload.type = file.type.startsWith('image/') ? 'image' : 'video';
+    }
+
+    await database.ref('messages').push(payload);
+
+    messageInput.value = '';
+    fileInput.value = '';
+    filePreview.innerHTML = '';
+    // closeModal();
+}
+
+/* ================== MESSAGE LISTENERS ================== */
+const messagesRef = database.ref('messages').limitToLast(100);
+
+messagesRef.on('child_added', snap => renderMessage(snap.key, snap.val()));
+messagesRef.on('child_changed', snap => updateMessage(snap.key, snap.val()));
+messagesRef.on('child_removed', snap => removeMessage(snap.key));
+
+function renderMessage(key, msg) {
+    const div = document.createElement('div');
+    div.className = 'message';
+    div.id = key;
+
+    const text = document.createElement('p');
+    text.textContent = `${msg.username}: ${msg.text || ''}`;
+
+    const time = document.createElement('span');
+    time.textContent = new Date(msg.timestamp).toLocaleTimeString();
+
+    div.append(text, time);
+
+    if (msg.uid === uid) {
+        const edit = document.createElement('i');
+        edit.className = 'material-icons';
+        edit.textContent = 'edit';
+        edit.onclick = () => {
+            const newText = prompt('Изменить сообщение', msg.text);
+            if (newText !== null) {
+                database.ref(`messages/${key}`).update({ text: newText });
+            }
+        };
+
+        const del = document.createElement('i');
+        del.className = 'material-icons';
+        del.textContent = 'delete';
+        del.onclick = () => database.ref(`messages/${key}`).remove();
+
+        div.append(edit, del);
+    }
+
+    if (msg.type === 'image') {
+        const img = document.createElement('img');
+        img.src = msg.fileUrl;
+        div.appendChild(img);
+    }
+
+    if (msg.type === 'video') {
+        const video = document.createElement('video');
+        video.src = msg.fileUrl;
+        video.controls = true;
+        div.appendChild(video);
+    }
+
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function updateMessage(key, msg) {
+    const el = document.getElementById(key);
+    if (el) el.querySelector('p').textContent = `${msg.username}: ${msg.text}`;
+}
+
+function removeMessage(key) {
+    const el = document.getElementById(key);
+    if (el) el.remove();
+}
+
+/* ================== FILE PREVIEW ================== */
+fileInput.addEventListener('change', e => {
+    filePreview.innerHTML = '';
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        const el = document.createElement(file.type.startsWith('image/') ? 'img' : 'video');
+        el.src = reader.result;
+        el.controls = true;
+        filePreview.appendChild(el);
+    };
+    reader.readAsDataURL(file);
+});
+
+/* ================== EVENTS ================== */
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+window.addEventListener('beforeunload', () => setStatus(false));
+
+window.onload = async () => {
+    await loadUser();
+    setStatus(true);
+    closeModal();
+};
+</script>
+
+</body>
+</html>

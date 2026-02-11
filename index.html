@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login and Registration</title>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<link rel="stylesheet" href="styles/styles-reg.css">
+
+</head>
+<body>
+<div class="container">
+    <div id="login">
+        <h2>Login</h2>
+        <div class="input-group">
+            <input type="email" placeholder="Email" id="loginEmail" required>
+        </div>
+        <div class="input-group">
+            <input type="password" placeholder="Password" id="loginPassword" required>
+        </div>
+        <div class="btn-group">
+            <button onclick="login()">Login</button>
+            <button onclick="showRegistration()">Register</button>
+        </div>
+        <p class="message" id="loginMessage"></p>
+    </div>
+    <div id="registration" style="display: none;">
+        <h2>Registration</h2>
+        <div class="input-group">
+            <input type="email" placeholder="Email" id="regEmail" required>
+        </div>
+        <div class="input-group">
+            <input type="password" placeholder="Password" id="regPassword" required>
+        </div>
+        <div class="input-group">
+            <input type="password" placeholder="Confirm Password" id="regConfirmPassword" required>
+        </div>
+        <div class="input-group">
+            <input type="text" placeholder="First Name" id="regFirstName" required>
+        </div>
+        <div class="input-group">
+            <input type="text" placeholder="Last Name" id="regLastName" required>
+        </div>
+        <div class="btn-group">
+            <button onclick="register()">Register</button>
+            <button onclick="showLogin()">Login</button>
+        </div>
+        <p class="message" id="registrationMessage"></p>
+    </div>
+</div>
+<!-- Firebase Config -->
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBDRXruhsAKhoSrshRTbL-v15wTLWYH-Ao",
+        authDomain: "webgramoteykin.firebaseapp.com",
+        databaseURL: "https://webgramoteykin-default-rtdb.firebaseio.com",
+        projectId: "webgramoteykin",
+        storageBucket: "webgramoteykin.appspot.com",
+        messagingSenderId: "402173829627",
+        appId: "1:402173829627:web:cc2117b2682c4e1a122b5e",
+        measurementId: "G-FZVVPD1SDR"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Login Function
+    function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then((cred) => {
+                console.log("Logged in user:", cred.user.email);
+                window.location.href = `chat.html?uid=${auth.currentUser.uid}`;
+
+            })
+            .catch(error => {
+                document.getElementById('loginMessage').innerText = error.message;
+            });
+    }
+
+    // Registration Function
+    function register() {
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
+        const firstName = document.getElementById('regFirstName').value;
+        const lastName = document.getElementById('regLastName').value;
+
+        if (password !== confirmPassword) {
+            document.getElementById('registrationMessage').innerText = "Passwords do not match.";
+            return;
+        }
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((cred) => {
+                return db.collection('users').doc(cred.user.uid).set({
+                    firstName: firstName,
+                    lastName: lastName,
+                    status: 'registered now',
+                    statusOnline: false,
+                    lastOnline: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .then(() => {
+                document.getElementById('registrationMessage').innerText = "Registration successful. Please login to start using the chat!";
+                showLogin();
+            })
+            .catch(error => {
+                document.getElementById('registrationMessage').innerText = error.message;
+            });
+    }
+
+    // Show Registration Form
+    function showRegistration() {
+        document.getElementById('login').style.display = "none";
+        document.getElementById('registration').style.display = "block";
+    }
+
+    // Show Login Form
+    function showLogin() {
+        document.getElementById('login').style.display = "block";
+        document.getElementById('registration').style.display = "none";
+    }
+</script>
+</body>
+</html>
